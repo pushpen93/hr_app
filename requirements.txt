@@ -2,5 +2,6 @@ streamlit==1.8.0
 pymupdf==1.19.6
 pytesseract==0.3.8
 Pillow==9.0.1
-pdfminer.six
-spacy
+pdfminer.six==20201018
+spacy==3.0.0
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.X.X/en_core_web_sm-3.X.X.tar.gz
