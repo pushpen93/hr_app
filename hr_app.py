@@ -21,3 +21,17 @@ def extract_text_from_image(uploaded_file):
     image = Image.open(io.BytesIO(uploaded_file.read()))
     text = pytesseract.image_to_string(image)
     return text
+
+
+if uploaded_file is not None:
+    # Check file type
+    if uploaded_file.type == "application/pdf":
+        extracted_text = extract_text_from_pdf(uploaded_file)
+    else:  # Assuming image
+        extracted_text = extract_text_from_image(uploaded_file)
+    
+    st.write(extracted_text)
+
+
+
+
