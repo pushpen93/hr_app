@@ -2,16 +2,6 @@ import streamlit as st
 
 uploaded_file = st.file_uploader("Upload your resume", type=["pdf", "png", "jpg", "jpeg"])
 
-st.set_page_config(layout="wide")
-base="dark"
-primaryColor="#BF2A7C" #PINK
-backgroundColor="#FFFFFF" #MAIN WINDOW BACKGROUND COLOR (white)
-secondaryBackgroundColor="#EBF3FC" #SIDEBAR COLOR (light blue)
-textColor="#31333F"
-secondaryColor="#F0F2F6" #dark_blue
-tertiaryColor ="#0810A6"
-light_pink = "#CDC9FA"
-plot_blue_colour="#0810A6" #vibrant blue for plots
 
 import fitz  # PyMuPDF
 
