@@ -3,7 +3,7 @@ import streamlit as st
 uploaded_file = st.file_uploader("Upload your resume", type=["pdf", "png", "jpg", "jpeg"])
 
 
-import fitz  # PyMuPDF
+import PyMuPDF  # PyMuPDF
 
 def extract_text_from_pdf(uploaded_file):
     text = ""
