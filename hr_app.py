@@ -101,4 +101,5 @@ with col2:
         
         # Use a text area with a scrollbar
         st.text_area("", extracted_text, height=400)
+        st.image(uploaded_file)
 
