@@ -1,80 +1,71 @@
 import streamlit as st
-import fitz  # PyMuPDF for PDF handling
+import fitz  # PyMuPDF
 import pytesseract
 from PIL import Image
 import io
-from docx import Document  # For DOCX file handling
-import re  # Regular expressions for text processing
+import spacy  # NLP library
+from spacy import displacy
 
-# Function to extract text from PDF
-def extract_text_from_pdf(uploaded_file):
-    text = ""
-    images = []
-    with fitz.open(stream=uploaded_file.read(), filetype="pdf") as doc:
-        for page in doc:
-            text += page.get_text()
-            # Extract images
-            image_list = page.get_images(full=True)
-            for image_index, img in enumerate(page.get_images(full=True)):
-                xref = img[0]
-                base_image = doc.extract_image(xref)
-                image_bytes = base_image["image"]
-                # Convert bytes to PIL Image
-                image = Image.open(io.BytesIO(image_bytes))
-                images.append(image)
-    return text, images
-
-# Function to extract basic information from text
-def extract_basic_info(text):
-    # Regular expressions for finding names, emails, mobile numbers, and addresses could be improved based on your data
-    email = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
-    phone = re.search(r'\b\d{10}\b', text)  # Adjust pattern according to the expected format
-    # Placeholder for name and address extraction, could use NLP or more specific regex
-    name = "John Doe"  # Placeholder, extracting names accurately may require NLP techniques
-    address = "123 Main St, City, Country"  # Placeholder, extracting addresses accurately is complex
-    return name, email.group(0) if email else "Not found", phone.group(0) if phone else "Not found", address
-
-# Function to display the candidate's photo
-def display_candidate_photo(images):
-    if images:
-        for image in images:
-            st.image(image, caption="Candidate Photo", use_column_width=True)
-    else:
-        st.write("No photo found in the PDF.")
+# Load the pre-trained NLP model
+nlp = spacy.load('en_core_web_sm')
 
 # Set the page configuration to use a wide layout
 st.set_page_config(layout="wide")
 
-# Use columns to create a side-by-side layout
-col1, col2 = st.columns([1, 3])
+# Function to display the candidate's passport-size photo
+def display_passport_size_photo(image):
+    # Define the size of a passport photo: 2x2 inches with 300 DPI
+    passport_size = (600, 600)  # (Width, Height) in pixels
+    image = image.resize(passport_size)
+    st.image(image, caption="Candidate Photo", use_column_width=False)
 
-# File uploader in the left column
-uploaded_file = col1.file_uploader("Upload your file", type=["pdf", "png", "jpg", "jpeg", "docx"])
+# NLP-based information extraction
+def extract_information_nlp(text):
+    doc = nlp(text)
+    # Assuming that the first PERSON entity in the document is the candidate's name
+    name = next((ent.text for ent in doc.ents if ent.label_ == "PERSON"), "Not found")
+    email = next((ent.text for ent in doc.ents if ent.label_ == "EMAIL"), "Not found")
+    phone = next((ent.text for ent in doc.ents if ent.label_ == "PHONE"), "Not found")
+    # Address extraction is more complex, not directly available in spaCy
+    address = "Not found"
+    return name, email, phone, address
 
-# Process the uploaded file and store the extracted text
-if uploaded_file is not None:
-    file_type = uploaded_file.type
-    if file_type == "application/pdf":
-        extracted_text, images = extract_text_from_pdf(uploaded_file)
-        display_candidate_photo(images)
-    elif file_type in ["image/png", "image/jpeg", "image/jpg"]:
-        extracted_text = extract_text_from_image(uploaded_file)
-    elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        extracted_text = extract_text_from_docx(uploaded_file)
-    else:
-        st.error("Unsupported file type")
-        extracted_text = ""
+# Main application
+def main():
+    st.title("Resume Analyzer")
     
-    if extracted_text:
-        name, email, phone, address = extract_basic_info(extracted_text)
-        with col2:
-            st.header("Candidate Basic Information")
+    # File uploader in the left column
+    uploaded_file = st.file_uploader("Upload your file", type=["pdf", "png", "jpg", "jpeg", "docx"])
+    
+    # Process the uploaded file and store the extracted text
+    if uploaded_file is not None:
+        file_type = uploaded_file.type
+        if file_type == "application/pdf":
+            text, images = extract_text_from_pdf(uploaded_file)
+            if images:
+                # Display the first image as the candidate photo
+                display_passport_size_photo(images[0])
+            else:
+                st.write("No photo found in the PDF.")
+        elif file_type in ["image/png", "image/jpeg", "image/jpg"]:
+            text = extract_text_from_image(uploaded_file)
+        # More conditions for docx or other file types...
+        
+        # Extract information using NLP
+        if text:
+            name, email, phone, address = extract_information_nlp(text)
             st.write(f"**Name:** {name}")
             st.write(f"**Email:** {email}")
             st.write(f"**Mobile Number:** {phone}")
             st.write(f"**Address:** {address}")
-        col1.success("File uploaded and processed successfully!")
-    else:
-        col1.error("Failed to extract information. Please try again with a different file.")
-else:
-    col1.write("Please upload a file to begin.")
+        else:
+            st.error("Could not extract any information from the file.")
+    
+    # Visualize the named entities (optional)
+    #if text:
+    #    doc = nlp(text)
+    #    html = displacy.render(doc, style="ent")
+    #    st.write(html, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
