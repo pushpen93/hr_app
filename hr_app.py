@@ -83,7 +83,7 @@ custom_css = """
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # Use columns to create a side-by-side layout
-col1, col2 = st.columns([1, 2])  # Adjust the ratio as needed
+col1, col2 = st.columns([0.5, 2])  # Adjust the ratio as needed
 
 with col1:
     # File uploader in the left column
@@ -101,5 +101,5 @@ with col2:
         
         # Use a text area with a scrollbar
         st.text_area("", extracted_text, height=400)
-        st.image(uploaded_file)
+        
 
