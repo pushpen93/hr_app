@@ -57,8 +57,7 @@ for _ in range(20):  # The range value may need to be adjusted
 
 # Right column for displaying the uploaded file's content or message
 with col2:
-    if uploaded_file is not None:
-        st.success("File uploaded successfully!")
+    st.write("Content or instructions will appear here.")
 
 # Process the uploaded file and store the extracted text
 if uploaded_file is not None:
