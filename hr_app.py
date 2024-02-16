@@ -34,14 +34,13 @@ st.set_page_config(layout="wide")
 # Custom CSS to attempt to align the file uploader at the bottom left
 st.markdown("""
     <style>
-        .st-c9 {
-            display: flex;
+        .css-1l02zno {
             flex-direction: column;
-            justify-content: flex-end;
-            height: 100%;
+            display: flex;
+            justify-content: space-between;
         }
-        .st-c9 .stFileUploader {
-            margin-top: auto;
+        .css-1l02zno > div:first-child {
+            flex: 1 !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -49,11 +48,10 @@ st.markdown("""
 # Use columns to create a side-by-side layout
 col1, col2 = st.columns([1, 3])
 
-# Placeholder for the top of the left column
-for _ in range(20):  # The range value may need to be adjusted
-    col1.empty()
-
- uploaded_file = st.file_uploader("Upload your file", type=["pdf", "png", "jpg", "jpeg", "docx"])
+# Placeholder to push the uploader to the bottom of the left column
+spacer = col1.empty()
+uploaded_file = col1.file_uploader("Upload your file", type=["pdf", "png", "jpg", "jpeg", "docx"])
+spacer.empty()  # This will remove the placeholder and push the uploader to the bottom
 
 # Right column for displaying the uploaded file's content or message
 with col2:
@@ -63,22 +61,15 @@ with col2:
 if uploaded_file is not None:
     if uploaded_file.type == "application/pdf":
         extracted_data = extract_text_from_pdf(uploaded_file)
-        st.write("Extracted Text from PDF:")
-        st.write(extracted_data)
     elif uploaded_file.type.startswith("image/"):
         extracted_data = extract_text_from_image(uploaded_file)
-        st.write("Extracted Text from Image:")
-        st.write(extracted_data)
     elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
         extracted_data = extract_text_from_docx(uploaded_file)
-        st.write("Extracted Text from DOCX:")
-        st.write(extracted_data)
     else:
         st.error("Unsupported file type")
 
-# Placeholder for inserting data into a Snowflake database
-# connect_to_snowflake()
-# insert_data_into_snowflake(extracted_data)
+    # At this point, `extracted_data` contains the text extracted from the uploaded file
+    # You can now insert this data into your Snowflake database
+    # The actual insertion code will depend on your Snowflake setup and is not shown here
 
-# Remove the placeholder to collapse the space at the top of the left column
-# top_placeholder.empty()
+# The rest of your app logic would go here
