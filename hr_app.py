@@ -67,7 +67,7 @@ custom_css = """
             font-Papyrus: bold;
         }
         .stButton>button {
-            color: black;
+            color: orange;
             border: none;
             padding: 20px 25px ;
             margin: 2.5px;
@@ -75,7 +75,7 @@ custom_css = """
             background-color: #5f9ea0;
         }
         .stTextArea {
-            border: 5px solid #F63366;
+            border: 1px solid #F63366;
         }
     </style>
 """
