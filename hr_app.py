@@ -69,10 +69,10 @@ custom_css = """
         .stButton>button {
             color: orange;
             border: none;
-            padding: 20px 25px ;
-            margin: 2.5px;
+            padding: 20px 15px ;
+            margin: 2px;
             border-radius: 1px;
-            background-color: #5f9ea0;
+            background-color: #FDF5E6;
         }
         .stTextArea {
             border: 1px solid #F63366;
