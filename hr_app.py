@@ -1,7 +1,7 @@
 import streamlit as st
 import fitz  # PyMuPDF
 import pytesseract
-from PIL import Image, ImageOps
+from PIL import Image
 import io
 import spacy  # NLP library
 import re  # For regex
@@ -27,9 +27,9 @@ def extract_text_from_pdf(uploaded_file):
 
 # Function to display the candidate's photo with a smaller size
 def display_candidate_photo(image):
-    # Resize the image to a smaller size for display purposes
-    display_size = (150, 150)  # (Width, Height) in pixels
-    image = ImageOps.fit(image, display_size, Image.ANTIALIAS)
+    # Define the size of a passport photo: 2x2 inches at 300 DPI
+    passport_size = (150, 150)  # Resize to 150x150 pixels
+    image = image.resize(passport_size, Image.ANTIALIAS)
     st.image(image, caption="Candidate Photo")
 
 def extract_text_from_image(uploaded_file):
@@ -42,7 +42,6 @@ def extract_information_nlp(text):
     doc = nlp(text)
     name = next((ent.text for ent in doc.ents if ent.label_ == "PERSON"), "Not found")
     
-    # Define regex patterns for email and phone
     email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
     phone_pattern = re.compile(r'\b\d{10}\b|\(\d{3}\)\s*\d{3}[-\s]*\d{4}')
     
@@ -59,27 +58,22 @@ def extract_information_nlp(text):
 def main():
     st.title("Resume Analyzer")
     
-    # File uploader in the left column
     uploaded_file = st.file_uploader("Upload your file", type=["pdf", "png", "jpg", "jpeg", "docx"])
     
-    # Process the uploaded file and store the extracted text
     if uploaded_file is not None:
         file_type = uploaded_file.type
         if file_type == "application/pdf":
             text, images = extract_text_from_pdf(uploaded_file)
             if images:
-                # Display the first image as the candidate photo
                 display_candidate_photo(images[0])
             else:
                 st.write("No photo found in the PDF.")
         elif file_type in ["image/png", "image/jpeg", "image/jpg"]:
-            text = extract_text_from_image(uploaded_file)
-            # Need to reload the image since it's already read
             uploaded_file.seek(0)
-            display_candidate_photo(Image.open(uploaded_file))
-        # More conditions for docx or other file types...
+            image = Image.open(uploaded_file)
+            text = extract_text_from_image(uploaded_file)
+            display_candidate_photo(image)
         
-        # Extract information using NLP
         if text:
             name, email, phone, address = extract_information_nlp(text)
             st.write(f"**Name:** {name}")
