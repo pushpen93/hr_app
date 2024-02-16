@@ -64,18 +64,18 @@ custom_css = """
             font-family: 'sans-serif';
         }
         .stFileUploader {
-            font-weight: bold;
+            font-Papyrus: bold;
         }
         .stButton>button {
-            color: white;
+            color: black;
             border: none;
-            padding: 10px 24px;
-            margin: 5px;
-            border-radius: 5px;
-            background-color: #F63366;
+            padding: 20px 25px ;
+            margin: 2.5px;
+            border-radius: 1px;
+            background-color: #5f9ea0;
         }
         .stTextArea {
-            border: 2px solid #F63366;
+            border: 5px solid #F63366;
         }
     </style>
 """
