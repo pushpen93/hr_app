@@ -1,89 +1,80 @@
 import streamlit as st
-import fitz  # PyMuPDF
+import fitz  # PyMuPDF for PDF handling
 import pytesseract
 from PIL import Image
 import io
 from docx import Document  # For DOCX file handling
+import re  # Regular expressions for text processing
 
 # Function to extract text from PDF
 def extract_text_from_pdf(uploaded_file):
     text = ""
+    images = []
     with fitz.open(stream=uploaded_file.read(), filetype="pdf") as doc:
         for page in doc:
             text += page.get_text()
-    return text
+            # Extract images
+            image_list = page.get_images(full=True)
+            for image_index, img in enumerate(page.get_images(full=True)):
+                xref = img[0]
+                base_image = doc.extract_image(xref)
+                image_bytes = base_image["image"]
+                # Convert bytes to PIL Image
+                image = Image.open(io.BytesIO(image_bytes))
+                images.append(image)
+    return text, images
 
-# Function to extract text from an image using OCR
-def extract_text_from_image(uploaded_file):
-    image = Image.open(io.BytesIO(uploaded_file.read()))
-    text = pytesseract.image_to_string(image)
-    return text
+# Function to extract basic information from text
+def extract_basic_info(text):
+    # Regular expressions for finding names, emails, mobile numbers, and addresses could be improved based on your data
+    email = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
+    phone = re.search(r'\b\d{10}\b', text)  # Adjust pattern according to the expected format
+    # Placeholder for name and address extraction, could use NLP or more specific regex
+    name = "John Doe"  # Placeholder, extracting names accurately may require NLP techniques
+    address = "123 Main St, City, Country"  # Placeholder, extracting addresses accurately is complex
+    return name, email.group(0) if email else "Not found", phone.group(0) if phone else "Not found", address
 
-# Function to extract text from DOCX
-def extract_text_from_docx(uploaded_file):
-    doc = Document(io.BytesIO(uploaded_file.read()))
-    text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
-    return text
+# Function to display the candidate's photo
+def display_candidate_photo(images):
+    if images:
+        for image in images:
+            st.image(image, caption="Candidate Photo", use_column_width=True)
+    else:
+        st.write("No photo found in the PDF.")
 
 # Set the page configuration to use a wide layout
 st.set_page_config(layout="wide")
 
-# Custom CSS to attempt to align the file uploader at the bottom left
-# and to make the left column appear "frozen"
-st.markdown("""
-    <style>
-        .css-1l02zno {
-            flex-direction: column;
-            display: flex;
-            justify-content: space-between;
-        }
-        .css-1l02zno > div:first-child {
-            flex: 1 !important;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-        }
-        .css-1l02zno > div:first-child > div {
-            margin-bottom: -1.5rem;  /* Adjust this value as needed */
-        }
-        .st-c9 {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;  /* Set the height of the left column to fill the screen height */
-            overflow-y: auto;  /* Enable scrolling if content overflows */
-        }
-    </style>
-""", unsafe_allow_html=True)
-
 # Use columns to create a side-by-side layout
 col1, col2 = st.columns([1, 3])
-
-# Placeholder to push the uploader to the bottom of the left column
-spacer = col1.empty()
 
 # File uploader in the left column
 uploaded_file = col1.file_uploader("Upload your file", type=["pdf", "png", "jpg", "jpeg", "docx"])
 
-# Variable to check if a file is uploaded successfully
-file_uploaded = False
-
-# Right column for displaying the uploaded file's content or message
-with col2:
-    # This section will be scrollable due to the content size
-    # Add your visualizations or any other elements here
-    pass
-
 # Process the uploaded file and store the extracted text
 if uploaded_file is not None:
-    file_uploaded = True
-    # Process the uploaded file based on its type
-    # ... (Processing logic goes here)
-
-# Add a success message at the bottom if a file is uploaded
-if file_uploaded:
-    col1.success("File uploaded successfully!")
-
-
-# This line removes the placeholder, pushing the file uploader to the bottom.
-# Remove the comment if you want the uploader at the bottom from the start.
-# spacer.empty()
+    file_type = uploaded_file.type
+    if file_type == "application/pdf":
+        extracted_text, images = extract_text_from_pdf(uploaded_file)
+        display_candidate_photo(images)
+    elif file_type in ["image/png", "image/jpeg", "image/jpg"]:
+        extracted_text = extract_text_from_image(uploaded_file)
+    elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+        extracted_text = extract_text_from_docx(uploaded_file)
+    else:
+        st.error("Unsupported file type")
+        extracted_text = ""
+    
+    if extracted_text:
+        name, email, phone, address = extract_basic_info(extracted_text)
+        with col2:
+            st.header("Candidate Basic Information")
+            st.write(f"**Name:** {name}")
+            st.write(f"**Email:** {email}")
+            st.write(f"**Mobile Number:** {phone}")
+            st.write(f"**Address:** {address}")
+        col1.success("File uploaded and processed successfully!")
+    else:
+        col1.error("Failed to extract information. Please try again with a different file.")
+else:
+    col1.write("Please upload a file to begin.")
