@@ -37,7 +37,6 @@ def extract_text_from_image(uploaded_file):
     text = pytesseract.image_to_string(image)
     return text
 
-
 # NLP-based information extraction with regex for email and phone
 def extract_information_nlp(text):
     doc = nlp(text)
@@ -75,7 +74,9 @@ def main():
                 st.write("No photo found in the PDF.")
         elif file_type in ["image/png", "image/jpeg", "image/jpg"]:
             text = extract_text_from_image(uploaded_file)
-            display_candidate_photo(Image.open(io.BytesIO(uploaded_file.read())))
+            # Need to reload the image since it's already read
+            uploaded_file.seek(0)
+            display_candidate_photo(Image.open(uploaded_file))
         # More conditions for docx or other file types...
         
         # Extract information using NLP
@@ -87,12 +88,6 @@ def main():
             st.write(f"**Address:** {address}")
         else:
             st.error("Could not extract any information from the file.")
-    
-    # Visualize the named entities (optional)
-    #if text:
-    #    doc = nlp(text)
-    #    html = displacy.render(doc, style="ent")
-    #    st.write(html, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
