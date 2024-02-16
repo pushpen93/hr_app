@@ -14,23 +14,10 @@ st.set_page_config(layout="wide")
 
 def extract_text_from_pdf(uploaded_file):
     text = ""
-    images = []
     with fitz.open(stream=uploaded_file.read(), filetype="pdf") as doc:
         for page in doc:
             text += page.get_text()
-            for img in page.get_images(full=True):
-                xref = img[0]
-                base_image = doc.extract_image(xref)
-                image_bytes = base_image["image"]
-                images.append(Image.open(io.BytesIO(image_bytes)))
-    return text, images
-
-# Function to display the candidate's photo with a smaller size
-def display_candidate_photo(image):
-    # Define the size of a passport photo: 2x2 inches at 300 DPI
-    passport_size = (150, 150)  # Resize to 150x150 pixels
-    image = image.resize(passport_size, Image.ANTIALIAS)
-    st.image(image, caption="Candidate Photo")
+    return text
 
 def extract_text_from_image(uploaded_file):
     image = Image.open(io.BytesIO(uploaded_file.read()))
@@ -63,16 +50,12 @@ def main():
     if uploaded_file is not None:
         file_type = uploaded_file.type
         if file_type == "application/pdf":
-            text, images = extract_text_from_pdf(uploaded_file)
-            if images:
-                display_candidate_photo(images[0])
-            else:
-                st.write("No photo found in the PDF.")
+            text = extract_text_from_pdf(uploaded_file)
         elif file_type in ["image/png", "image/jpeg", "image/jpg"]:
-            uploaded_file.seek(0)
-            image = Image.open(uploaded_file)
             text = extract_text_from_image(uploaded_file)
-            display_candidate_photo(image)
+        else:
+            st.error("Unsupported file type")
+            text = ""
         
         if text:
             name, email, phone, address = extract_information_nlp(text)
