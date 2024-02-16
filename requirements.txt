@@ -3,3 +3,4 @@ pymupdf
 pytesseract
 Pillow
 python-docx
+spacy
