@@ -12,6 +12,19 @@ nlp = spacy.load('en_core_web_sm')
 # Set the page configuration to use a wide layout
 st.set_page_config(layout="wide")
 
+def extract_text_from_pdf(uploaded_file):
+    text = ""
+    images = []
+    with fitz.open(stream=uploaded_file.read(), filetype="pdf") as doc:
+        for page in doc:
+            text += page.get_text()
+            for img in page.get_images(full=True):
+                xref = img[0]
+                base_image = doc.extract_image(xref)
+                image_bytes = base_image["image"]
+                images.append(Image.open(io.BytesIO(image_bytes)))
+    return text, images
+
 # Function to display the candidate's passport-size photo
 def display_passport_size_photo(image):
     # Define the size of a passport photo: 2x2 inches with 300 DPI
