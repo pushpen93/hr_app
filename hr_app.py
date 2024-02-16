@@ -83,7 +83,6 @@ if uploaded_file is not None:
 if file_uploaded:
     col1.success("File uploaded successfully!")
 
-st.write(uploaded_file)
 
 # This line removes the placeholder, pushing the file uploader to the bottom.
 # Remove the comment if you want the uploader at the bottom from the start.
