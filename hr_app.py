@@ -83,7 +83,7 @@ custom_css = """
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # Use columns to create a side-by-side layout
-col1, col2 = st.columns([3, 2])  # Adjust the ratio as needed
+col1, col2 = st.columns([2.5, 5])  # Adjust the ratio as needed
 
 with col1:
     # File uploader in the left column
