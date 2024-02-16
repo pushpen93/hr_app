@@ -34,17 +34,14 @@ st.set_page_config(layout="wide")
 # Custom CSS to attempt to align the file uploader at the bottom left
 st.markdown("""
     <style>
-        .css-1l02zno {
+        .st-c9 {
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
+            height: 100%;
         }
-        .css-18e3th9 {
-            padding-top: 5rem;
-            padding-bottom: 5rem;
-        }
-        .stButton > button {
-            margin-top: 1rem;
+        .st-c9 .stFileUploader {
+            margin-top: auto;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -53,11 +50,10 @@ st.markdown("""
 col1, col2 = st.columns([1, 3])
 
 # Placeholder for the top of the left column
-top_placeholder = col1.empty()
+for _ in range(20):  # The range value may need to be adjusted
+    col1.empty()
 
-# This should be at the bottom of the left column
-with col1:
-    uploaded_file = st.file_uploader("Upload your file", type=["pdf", "png", "jpg", "jpeg", "docx"])
+ uploaded_file = st.file_uploader("Upload your file", type=["pdf", "png", "jpg", "jpeg", "docx"])
 
 # Right column for displaying the uploaded file's content or message
 with col2:
