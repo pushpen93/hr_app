@@ -1,10 +1,10 @@
 import streamlit as st
 import fitz  # PyMuPDF
 import pytesseract
-from PIL import Image
+from PIL import Image, ImageOps
 import io
 import spacy  # NLP library
-from spacy import displacy
+import re  # For regex
 
 # Load the pre-trained NLP model
 nlp = spacy.load('en_core_web_sm')
@@ -25,22 +25,35 @@ def extract_text_from_pdf(uploaded_file):
                 images.append(Image.open(io.BytesIO(image_bytes)))
     return text, images
 
-# Function to display the candidate's passport-size photo
-def display_passport_size_photo(image):
-    # Define the size of a passport photo: 2x2 inches with 300 DPI
-    passport_size = (600, 600)  # (Width, Height) in pixels
-    image = image.resize(passport_size)
-    st.image(image, caption="Candidate Photo", use_column_width=False)
+# Function to display the candidate's photo with a smaller size
+def display_candidate_photo(image):
+    # Resize the image to a smaller size for display purposes
+    display_size = (150, 150)  # (Width, Height) in pixels
+    image = ImageOps.fit(image, display_size, Image.ANTIALIAS)
+    st.image(image, caption="Candidate Photo")
 
-# NLP-based information extraction
+def extract_text_from_image(uploaded_file):
+    image = Image.open(io.BytesIO(uploaded_file.read()))
+    text = pytesseract.image_to_string(image)
+    return text
+
+
+# NLP-based information extraction with regex for email and phone
 def extract_information_nlp(text):
     doc = nlp(text)
-    # Assuming that the first PERSON entity in the document is the candidate's name
     name = next((ent.text for ent in doc.ents if ent.label_ == "PERSON"), "Not found")
-    email = next((ent.text for ent in doc.ents if ent.label_ == "EMAIL"), "Not found")
-    phone = next((ent.text for ent in doc.ents if ent.label_ == "PHONE"), "Not found")
-    # Address extraction is more complex, not directly available in spaCy
-    address = "Not found"
+    
+    # Define regex patterns for email and phone
+    email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
+    phone_pattern = re.compile(r'\b\d{10}\b|\(\d{3}\)\s*\d{3}[-\s]*\d{4}')
+    
+    email = re.search(email_pattern, text)
+    phone = re.search(phone_pattern, text)
+    
+    email = email.group(0) if email else "Not found"
+    phone = phone.group(0) if phone else "Not found"
+    address = "Not found"  # Address extraction remains complex
+    
     return name, email, phone, address
 
 # Main application
@@ -57,11 +70,12 @@ def main():
             text, images = extract_text_from_pdf(uploaded_file)
             if images:
                 # Display the first image as the candidate photo
-                display_passport_size_photo(images[0])
+                display_candidate_photo(images[0])
             else:
                 st.write("No photo found in the PDF.")
         elif file_type in ["image/png", "image/jpeg", "image/jpg"]:
             text = extract_text_from_image(uploaded_file)
+            display_candidate_photo(Image.open(io.BytesIO(uploaded_file.read())))
         # More conditions for docx or other file types...
         
         # Extract information using NLP
